@@ -5,10 +5,13 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inventory;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Models\Product;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -16,8 +19,10 @@ class PurchaseOrderController extends Controller
 {
     public function index()
     {
-        $purchaseOrders = PurchaseOrder::with(['supplier', 'user'])->latest()->paginate(10);
-        return view('inventory.purchase-orders.index', compact('purchaseOrders'));
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'user', 'items.product'])->latest()->paginate(10);
+        $suppliers = Supplier::all();
+        $products = Product::with('inventory')->get();
+        return view('inventory.purchase-orders.index', compact('purchaseOrders', 'suppliers', 'products'));
     }
     
     public function create()
@@ -64,7 +69,7 @@ class PurchaseOrderController extends Controller
             ]);
         }
         
-        return redirect()->route('inventory.purchase-orders.show', $purchaseOrder)->with('success', 'Purchase order created successfully');
+        return redirect()->route('inventory.purchase-orders.index')->with('success', 'Purchase order created successfully.');
     }
     
     public function show(PurchaseOrder $purchaseOrder)
@@ -129,7 +134,7 @@ class PurchaseOrderController extends Controller
             ]);
         }
         
-        return redirect()->route('inventory.purchase-orders.show', $purchaseOrder)->with('success', 'Purchase order updated successfully');
+        return redirect()->route('inventory.purchase-orders.index')->with('success', 'Purchase order updated successfully.');
     }
     
     public function approve(PurchaseOrder $purchaseOrder)
@@ -147,15 +152,22 @@ class PurchaseOrderController extends Controller
         if ($purchaseOrder->status != 'approved') {
             return back()->with('error', 'Only approved purchase orders can be marked as received');
         }
-        
-        // Update inventory for each item
+
+        $stockService = app(StockService::class);
+
         foreach ($purchaseOrder->items as $item) {
-            $inventory = Inventory::where('product_id', $item->product_id)->first();
-            if ($inventory) {
-                $inventory->increment('quantity', $item->quantity);
+            $product = Product::find($item->product_id);
+            if ($product) {
+                $stockService->increase(
+                    $product,
+                    $item->quantity,
+                    StockMovement::REASON_PURCHASE_ORDER,
+                    "PO #{$purchaseOrder->po_number}",
+                    $purchaseOrder
+                );
             }
         }
-        
+
         $purchaseOrder->update(['status' => 'delivered']);
         return back()->with('success', 'Purchase order marked as delivered and inventory updated');
     }

@@ -75,7 +75,7 @@
                                     <tr>
                                         <td>{{ $order->order_number }}</td>
                                         <td>{{ $order->created_at->format('m/d/Y') }}</td>
-                                        <td>${{ number_format($order->total, 2) }}</td>
+                                        <td>₱{{ number_format($order->total, 2) }}</td>
                                         <td>
                                             @if($order->sale)
                                                 <span class="badge bg-{{ $order->sale->payment_status == 'paid' ? 'success' : 'warning' }}">

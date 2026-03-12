@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -44,6 +45,19 @@ class Product extends Model
     public function purchaseOrderItems()
     {
         return $this->hasMany(PurchaseOrderItem::class);
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        if ($this->image) {
+            return Storage::disk('s3')->url($this->image);
+        }
+        return asset('images/no-image.png');
     }
 
     public function getStockAttribute()

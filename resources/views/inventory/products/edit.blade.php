@@ -88,7 +88,7 @@
                             <div class="col-md-6">
                                 @if($product->image)
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/'.$product->image) }}" alt="Current Image" width="100">
+                                    <img src="{{ $product->image_url }}" alt="Current Image" width="100">
                                 </div>
                                 @endif
                                 <input id="image" type="file" class="form-control-file @error('image') is-invalid @enderror" name="image">
@@ -118,7 +118,7 @@
                         <div class="form-group row">
                             <div class="col-md-6 offset-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="is_featured" id="is_featured" {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="is_featured" id="is_featured" value="1" {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="is_featured">
                                         Featured Product
                                     </label>

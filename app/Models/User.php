@@ -19,16 +19,30 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'department_id'
+        'department_id',
+        'is_active',
+        'mfa_method',
+        'mfa_secret',
+        'mfa_verified_at',
+        'approved_at',
+        'approved_by',
+        'rejected_at',
+        'rejection_reason',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'mfa_secret',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_active'         => 'boolean',
+        'mfa_verified_at'   => 'datetime',
+        'approved_at'       => 'datetime',
+        'rejected_at'       => 'datetime',
+        'mfa_secret'        => 'encrypted',
     ];
 
     public function department()
@@ -74,5 +88,17 @@ class User extends Authenticatable
     public function isCustomer()
     {
         return $this->role === 'customer';
+    }
+
+    public function isPendingApproval(): bool
+    {
+        return $this->mfa_verified_at !== null
+            && !$this->is_active
+            && $this->rejected_at === null;
+    }
+
+    public function mfaCodes()
+    {
+        return $this->hasMany(MfaCode::class);
     }
 }

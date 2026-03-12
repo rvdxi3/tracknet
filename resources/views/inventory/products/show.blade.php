@@ -17,7 +17,7 @@
                 <div class="card-body">
                     <div class="row mb-4">
                         <div class="col-md-4 text-center">
-                            <img src="{{ $product->image ? asset('storage/'.$product->image) : asset('images/placeholder.png') }}" 
+                            <img src="{{ $product->image_url }}"
                                  alt="{{ $product->name }}" class="img-fluid" style="max-height: 200px;">
                         </div>
                         <div class="col-md-8">
@@ -36,14 +36,14 @@
                                 </tr>
                                 <tr>
                                     <th>Price:</th>
-                                    <td>${{ number_format($product->price, 2) }}</td>
+                                    <td>₱{{ number_format($product->price, 2) }}</td>
                                 </tr>
                                 <tr>
                                     <th>Current Stock:</th>
                                     <td>
                                         {{ $product->inventory->quantity ?? 0 }}
                                         @if($product->inventory && $product->inventory->quantity <= $product->inventory->low_stock_threshold)
-                                            <span class="badge badge-warning ml-2">Low Stock</span>
+                                            <span class="badge bg-warning text-dark ml-2">Low Stock</span>
                                         @endif
                                     </td>
                                 </tr>

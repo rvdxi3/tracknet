@@ -1,7 +1,5 @@
 <?php
 
-// database/seeders/UsersTableSeeder.php
-
 namespace Database\Seeders;
 
 use App\Models\Department;
@@ -16,45 +14,57 @@ class UsersTableSeeder extends Seeder
         // Create departments
         $departments = [
             ['name' => 'Administration', 'description' => 'System administrators'],
-            ['name' => 'Inventory', 'description' => 'Inventory management team'],
-            ['name' => 'Sales', 'description' => 'Sales and customer service'],
+            ['name' => 'Inventory',      'description' => 'Inventory management team'],
+            ['name' => 'Sales',          'description' => 'Sales and customer service'],
         ];
-        
+
         foreach ($departments as $department) {
             Department::create($department);
         }
-        
-        // Create admin user
+
+        $now = now();
+
+        // Staff users — active by default, bypass MFA + approval
         User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-            'department_id' => Department::where('name', 'Administration')->first()->id
+            'name'             => 'Admin User',
+            'email'            => 'admin@example.com',
+            'password'         => Hash::make('password'),
+            'role'             => 'admin',
+            'department_id'    => Department::where('name', 'Administration')->value('id'),
+            'is_active'        => true,
+            'mfa_verified_at'  => $now,
+            'approved_at'      => $now,
         ]);
-        
-        // Create inventory user
+
         User::create([
-            'name' => 'Inventory User',
-            'email' => 'inventory@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'inventory',
-            'department_id' => Department::where('name', 'Inventory')->first()->id
+            'name'             => 'Inventory User',
+            'email'            => 'inventory@example.com',
+            'password'         => Hash::make('password'),
+            'role'             => 'inventory',
+            'department_id'    => Department::where('name', 'Inventory')->value('id'),
+            'is_active'        => true,
+            'mfa_verified_at'  => $now,
+            'approved_at'      => $now,
         ]);
-        
-        // Create sales user
+
         User::create([
-            'name' => 'Sales User',
-            'email' => 'sales@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'sales',
-            'department_id' => Department::where('name', 'Sales')->first()->id
+            'name'             => 'Sales User',
+            'email'            => 'sales@example.com',
+            'password'         => Hash::make('password'),
+            'role'             => 'sales',
+            'department_id'    => Department::where('name', 'Sales')->value('id'),
+            'is_active'        => true,
+            'mfa_verified_at'  => $now,
+            'approved_at'      => $now,
         ]);
-        
-        // Create some customers
+
+        // Sample approved customers for demo data
         User::factory()->count(10)->create([
-            'role' => 'customer',
-            'department_id' => null
+            'role'            => 'customer',
+            'department_id'   => null,
+            'is_active'       => true,
+            'mfa_verified_at' => $now,
+            'approved_at'     => $now,
         ]);
     }
 }

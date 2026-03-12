@@ -1,0 +1,113 @@
+# =============================================================
+# Docker Compose for TrackNet Inventory Management
+# =============================================================
+# This file defines 3 services (containers) that work together:
+#   1. app    - PHP + Apache (your Laravel application)
+#   2. db     - MySQL (your database)
+#   3. phpmyadmin - Web UI for managing MySQL (like XAMPP's phpMyAdmin)
+#
+# To start:  docker-compose up -d --build
+# To stop:   docker-compose down
+# To reset DB: docker-compose exec app php artisan migrate:fresh --seed
+
+services:
+
+  # -------------------------------------------------------
+  # SERVICE 1: app (PHP + Apache)
+  # -------------------------------------------------------
+  # This is your Laravel application. It builds from the Dockerfile
+  # we created above.
+  app:
+    build:
+      context: .          # Use the current directory as build context
+      dockerfile: Dockerfile  # Use our Dockerfile to build the image
+    container_name: tracknet-app
+    ports:
+      - "8080:80"         # Map port 8080 on YOUR PC to port 80 in the container.
+                          # Access the app at http://localhost:8080
+                          # We use 8080 so it doesn't conflict with XAMPP's port 80.
+    volumes:
+      - .:/var/www/html   # MOUNT your local project folder into the container.
+                          # This means when you edit code in VS Code, the changes
+                          # are instantly reflected inside the container.
+                          # Without this, you'd have to rebuild every time.
+    environment:
+      # These override what's in .env so Laravel connects to the Docker MySQL
+      # container instead of your local XAMPP MySQL.
+      - DB_HOST=db                  # "db" refers to the MySQL service below
+      - DB_PORT=3306
+      - DB_DATABASE=tracknet
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret          # Must match MYSQL_ROOT_PASSWORD below
+      - APP_URL=http://localhost:8080
+      - MAIL_MAILER=log             # Use log driver in Docker — avoids Gmail SSL issues
+                                    # OTP codes will show on-screen (dev banner)
+    depends_on:
+      db:
+        condition: service_healthy  # Wait for MySQL to be ready before starting
+    networks:
+      - tracknet-network            # Connect to our private network
+
+  # -------------------------------------------------------
+  # SERVICE 2: db (MySQL)
+  # -------------------------------------------------------
+  # This replaces XAMPP's MySQL. It runs MySQL 8.0 in its own container.
+  db:
+    image: mysql:8.0      # Use the official MySQL 8.0 image from Docker Hub
+    container_name: tracknet-db
+    ports:
+      - "3307:3306"       # Map port 3307 on YOUR PC to 3306 in the container.
+                          # We use 3307 so it doesn't conflict with XAMPP's MySQL.
+                          # You can connect via MySQL Workbench at localhost:3307.
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret    # Root password for MySQL
+      - MYSQL_DATABASE=tracknet       # Automatically create this database on first run
+    volumes:
+      - db-data:/var/lib/mysql        # PERSIST database data in a named volume.
+                                      # Without this, your data would be lost every
+                                      # time you stop the container!
+    healthcheck:
+      # Docker will check if MySQL is actually ready to accept connections.
+      # The "app" service waits for this before starting.
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tracknet-network
+
+  # -------------------------------------------------------
+  # SERVICE 3: phpmyadmin
+  # -------------------------------------------------------
+  # A web-based database manager, just like the phpMyAdmin in XAMPP.
+  # Access it at http://localhost:8081
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: tracknet-phpmyadmin
+    ports:
+      - "8081:80"         # Access phpMyAdmin at http://localhost:8081
+    environment:
+      - PMA_HOST=db       # Connect to our MySQL container
+      - PMA_PORT=3306
+      - MYSQL_ROOT_PASSWORD=secret
+    depends_on:
+      - db
+    networks:
+      - tracknet-network
+
+# -------------------------------------------------------
+# NETWORKS
+# -------------------------------------------------------
+# A private network so containers can talk to each other by name.
+# For example, the "app" container can reach MySQL at hostname "db".
+networks:
+  tracknet-network:
+    driver: bridge
+
+# -------------------------------------------------------
+# VOLUMES
+# -------------------------------------------------------
+# Named volumes persist data even when containers are stopped/removed.
+# "db-data" stores your MySQL database files.
+volumes:
+  db-data:

@@ -11,7 +11,22 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Global middleware (runs on every request)
+        $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
+        $middleware->append(\App\Http\Middleware\EnsureAccountIsActive::class);
+
+        // Exclude webhook routes from CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/paymongo',
+        ]);
+
+        // Route middleware aliases
+        $middleware->alias([
+            'admin'     => \App\Http\Middleware\AdminMiddleware::class,
+            'inventory' => \App\Http\Middleware\InventoryMiddleware::class,
+            'sales'     => \App\Http\Middleware\SalesMiddleware::class,
+            'customer'  => \App\Http\Middleware\CustomerMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

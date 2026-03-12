@@ -10,13 +10,15 @@ use App\Models\Category;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
     public function index()
     {
         $products = Product::with(['category', 'inventory'])->paginate(10);
-        return view('inventory.products.index', compact('products'));
+        $categories = Category::all();
+        return view('inventory.products.index', compact('products', 'categories'));
     }
     
     public function create()
@@ -43,10 +45,10 @@ class ProductController extends Controller
         $product->is_featured = $request->has('is_featured');
         
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
+            $path = $request->file('image')->store('products', 's3');
             $product->image = $path;
         }
-        
+
         $product->save();
         
         // Create inventory record
@@ -87,12 +89,10 @@ class ProductController extends Controller
         $product->is_featured = $request->has('is_featured');
         
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+                Storage::disk('s3')->delete($product->image);
             }
-            
-            $path = $request->file('image')->store('products', 'public');
+            $path = $request->file('image')->store('products', 's3');
             $product->image = $path;
         }
         
@@ -109,9 +109,9 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         if ($product->image) {
-            Storage::disk('public')->delete($product->image);
+            Storage::disk('s3')->delete($product->image);
         }
-        
+
         $product->delete();
         return redirect()->route('inventory.products.index')->with('success', 'Product deleted successfully');
     }

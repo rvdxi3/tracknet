@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Website;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Notifications\OrderCancelledNotification;
+use App\Services\PdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -56,16 +58,69 @@ class AccountController extends Controller
     
     public function orders()
     {
-        $orders = Auth::user()->orders()->latest()->paginate(10);
+        $orders = Auth::user()->orders()->with(['sale', 'items'])->latest()->paginate(10);
         return view('website.account.orders.index', compact('orders'));
     }
-    
+
     public function orderShow(Order $order)
     {
         if ($order->user_id !== Auth::id()) {
             abort(403);
         }
-        
+
+        $order->load(['sale', 'items.product.category']);
         return view('website.account.orders.show', compact('order'));
     }
+
+    public function orderReceipt(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $order->load(['user', 'sale', 'items.product.category']);
+        return view('website.account.orders.receipt', compact('order'));
+    }
+
+    public function orderReceiptPdf(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $order->load(['user', 'sale', 'items.product.category']);
+        $url = app(PdfService::class)->getTemporaryUrl($order);
+        return redirect()->away($url);
+    }
+
+    public function cancelOrder(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!$order->sale || $order->sale->fulfillment_status !== 'pending') {
+            return back()->with('error', 'Only pending orders can be cancelled.');
+        }
+
+        $order->load('items.product.inventory');
+        foreach ($order->items as $item) {
+            if ($item->product->inventory) {
+                $item->product->inventory->increment('quantity', $item->quantity);
+            }
+        }
+
+        $order->sale->update([
+            'fulfillment_status' => 'cancelled',
+            'payment_status'     => 'refunded',
+        ]);
+
+        try {
+            $order->user->notify(new OrderCancelledNotification($order));
+        } catch (\Exception $e) {}
+
+        return redirect()->route('account.orders')
+            ->with('success', 'Your order has been cancelled.');
+    }
+
 }

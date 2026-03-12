@@ -13,11 +13,11 @@ class HomeController extends Controller
     public function index()
     {
         $featuredProducts = Product::where('is_featured', true)
-            ->with('inventory')
+            ->with(['category', 'inventory'])
             ->inRandomOrder()
             ->take(8)
             ->get();
-            
+
         return view('website.home', compact('featuredProducts'));
     }
 }

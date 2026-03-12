@@ -15,8 +15,9 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('department')->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $users       = User::with('department')->paginate(10);
+        $departments = Department::all();
+        return view('admin.users.index', compact('users', 'departments'));
     }
     
     public function create()
