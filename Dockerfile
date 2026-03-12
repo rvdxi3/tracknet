@@ -51,9 +51,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     zip
 
 # -- APACHE CONFIGURATION --
-# Enable Apache's mod_rewrite, which Laravel needs for clean URLs.
-# This is the same as enabling "LoadModule rewrite_module" in XAMPP's httpd.conf.
-RUN a2enmod rewrite
+# Disable conflicting MPM modules and ensure only mpm_prefork is active.
+# Enable mod_rewrite for Laravel's clean URLs.
+RUN a2dismod mpm_event mpm_worker 2>/dev/null || true \
+    && a2enmod mpm_prefork rewrite
 
 # -- DOCUMENT ROOT --
 # Tell Apache to serve files from /var/www/html/public (Laravel's public folder).
