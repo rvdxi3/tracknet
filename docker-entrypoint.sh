@@ -25,13 +25,25 @@ php artisan view:cache 2>&1 || echo "[WARN] view:cache failed — views will com
 echo "==> Running database migrations..."
 php artisan migrate --force
 
-echo "==> Seeding database (only if users table is empty)..."
+echo "==> Seeding database..."
 USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null | tail -1 | tr -d '\r\n')
 if [ "$USER_COUNT" = "0" ]; then
-    echo "    No users found — running seeders..."
+    echo "    No users found — running all seeders..."
     php artisan db:seed --force
 else
-    echo "    Users exist (count=$USER_COUNT) — skipping seed."
+    echo "    Users exist (count=$USER_COUNT) — checking products..."
+    PRODUCT_COUNT=$(php artisan tinker --execute="echo \App\Models\Product::count();" 2>/dev/null | tail -1 | tr -d '\r\n')
+    if [ "$PRODUCT_COUNT" = "0" ]; then
+        echo "    No products found — running data seeders..."
+        php artisan db:seed --class=CategoriesTableSeeder --force
+        php artisan db:seed --class=ProductsTableSeeder --force
+        php artisan db:seed --class=InventoryTableSeeder --force
+        php artisan db:seed --class=SuppliersTableSeeder --force
+        php artisan db:seed --class=PurchaseOrdersTableSeeder --force
+        php artisan db:seed --class=OrdersTableSeeder --force
+    else
+        echo "    Products exist (count=$PRODUCT_COUNT) — skipping seed."
+    fi
 fi
 
 echo "==> Starting Apache..."
