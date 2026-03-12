@@ -51,5 +51,10 @@ else
     fi
 fi
 
+if [ "${CLEAN_TEST_USERS}" = "true" ]; then
+    echo "==> CLEAN_TEST_USERS=true — removing non-staff user accounts..."
+    php artisan tinker --execute="App\Models\User::whereNotIn('role', ['admin','inventory','sales'])->delete(); echo 'Done.';" 2>&1
+fi
+
 echo "==> Starting Apache..."
 exec apache2-foreground
