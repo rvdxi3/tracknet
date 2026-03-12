@@ -51,10 +51,18 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     zip
 
 # -- APACHE CONFIGURATION --
-# Disable conflicting MPM modules and ensure only mpm_prefork is active.
-# Enable mod_rewrite for Laravel's clean URLs.
+# Forcefully remove any competing MPM module symlinks, then enable only mpm_prefork.
+# (mod_php requires mpm_prefork; mpm_event/mpm_worker cause "More than one MPM loaded".)
+# Also enable mod_rewrite so Laravel's .htaccess clean URLs work.
+# AllowOverride All lets .htaccess rules take effect (required for route rewriting).
 RUN a2dismod mpm_event mpm_worker 2>/dev/null || true \
-    && a2enmod mpm_prefork rewrite
+    && rm -f /etc/apache2/mods-enabled/mpm_event.conf \
+             /etc/apache2/mods-enabled/mpm_event.load \
+             /etc/apache2/mods-enabled/mpm_worker.conf \
+             /etc/apache2/mods-enabled/mpm_worker.load \
+    && a2enmod mpm_prefork rewrite \
+    && sed -ri -e 's|AllowOverride None|AllowOverride All|g' \
+        /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # -- DOCUMENT ROOT --
 # Tell Apache to serve files from /var/www/html/public (Laravel's public folder).
