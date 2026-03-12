@@ -86,6 +86,10 @@ return [
             'transport' => 'array',
         ],
 
+        'brevo' => [
+            'transport' => 'brevo',
+        ],
+
         'failover' => [
             'transport' => 'failover',
             'mailers' => [

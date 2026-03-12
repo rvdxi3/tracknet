@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoTransportFactory;
 use Symfony\Component\Mailer\Transport\Dsn;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransportFactory;
@@ -60,6 +61,13 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return $transport;
+        });
+
+        // Brevo HTTP API transport (works on Railway — no SMTP ports needed)
+        Mail::extend('brevo', function (array $config) {
+            return (new BrevoTransportFactory())->create(
+                new Dsn('brevo+api', 'default', env('BREVO_API_KEY'))
+            );
         });
     }
 }
