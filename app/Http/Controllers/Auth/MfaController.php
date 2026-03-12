@@ -194,15 +194,20 @@ class MfaController extends Controller
             'expires_at' => now()->addMinutes(10),
         ]);
 
-        // Send via Laravel mail (log driver in dev)
-        \Mail::raw(
-            "Your TrackNet verification code is: {$code}\n\nThis code expires in 10 minutes.",
-            function ($message) use ($user, $code) {
-                $message->to($user->email, $user->name)
-                    ->subject('TrackNet — Your Verification Code: ' . $code)
-                    ->from(config('mail.from.address', 'noreply@tracknet.com'), 'TrackNet');
-            }
-        );
+        // Send via Laravel mail — wrapped in try/catch so a mail failure
+        // never crashes the registration flow.
+        try {
+            \Mail::raw(
+                "Your TrackNet verification code is: {$code}\n\nThis code expires in 10 minutes.",
+                function ($message) use ($user, $code) {
+                    $message->to($user->email, $user->name)
+                        ->subject('TrackNet — Your Verification Code: ' . $code)
+                        ->from(config('mail.from.address', 'noreply@tracknet.com'), 'TrackNet');
+                }
+            );
+        } catch (\Exception $e) {
+            \Log::error('MFA email failed: ' . $e->getMessage());
+        }
 
         // In development (log mail driver), surface the code on-screen so testing doesn't require reading logs
         if (config('mail.default') === 'log') {
