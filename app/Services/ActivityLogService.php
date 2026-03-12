@@ -21,23 +21,31 @@ class ActivityLogService
         $ip        = $request?->ip();
         $userAgent = $request?->userAgent();
 
-        // Database record (for admin panel)
-        ActivityLog::create([
-            'user_id'    => $userId,
-            'action'     => $action,
-            'description'=> $description,
-            'ip_address' => $ip,
-            'user_agent' => $userAgent,
-            'metadata'   => $metadata,
-        ]);
+        // Database record (for admin panel) — wrapped so a missing table never crashes the request
+        try {
+            ActivityLog::create([
+                'user_id'    => $userId,
+                'action'     => $action,
+                'description'=> $description,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+                'metadata'   => $metadata,
+            ]);
+        } catch (\Throwable $e) {
+            // Never let an activity log failure crash the request
+        }
 
-        // Flat log file record (storage/logs/laravel.log)
-        Log::channel('daily')->info("[ACTIVITY] {$action}", array_filter([
-            'user_id'     => $userId,
-            'description' => $description,
-            'ip'          => $ip,
-            'metadata'    => $metadata,
-        ]));
+        // Flat log record (uses default channel — stderr on Railway, daily locally)
+        try {
+            Log::info("[ACTIVITY] {$action}", array_filter([
+                'user_id'     => $userId,
+                'description' => $description,
+                'ip'          => $ip,
+                'metadata'    => $metadata,
+            ]));
+        } catch (\Throwable $e) {
+            // Never let a logging failure crash the request
+        }
     }
 
     // ── Convenience wrappers ─────────────────────────────────────────────────
