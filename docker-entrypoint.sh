@@ -25,5 +25,14 @@ php artisan view:cache 2>&1 || echo "[WARN] view:cache failed — views will com
 echo "==> Running database migrations..."
 php artisan migrate --force
 
+echo "==> Seeding database (only if users table is empty)..."
+USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null | tail -1 | tr -d '\r\n')
+if [ "$USER_COUNT" = "0" ]; then
+    echo "    No users found — running seeders..."
+    php artisan db:seed --force
+else
+    echo "    Users exist (count=$USER_COUNT) — skipping seed."
+fi
+
 echo "==> Starting Apache..."
 exec apache2-foreground
