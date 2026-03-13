@@ -8,21 +8,32 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            // email_hash: SHA-256 hash for lookups (email column will be encrypted, not queryable)
-            $table->string('email_hash', 64)->nullable()->after('email');
-        });
+        // Add email_hash column if it doesn't already exist
+        if (!Schema::hasColumn('users', 'email_hash')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('email_hash', 64)->nullable()->after('email');
+            });
+        }
 
         // Change email column to text to hold encrypted values
         Schema::table('users', function (Blueprint $table) {
             $table->text('email')->change();
         });
 
-        // Drop the unique index on email, add it on email_hash instead
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropUnique(['email']);
-            $table->unique('email_hash');
-        });
+        // Drop the unique index on email (if exists), add unique on email_hash
+        $indexes = collect(Schema::getIndexes('users'))->pluck('name')->toArray();
+
+        if (in_array('users_email_unique', $indexes)) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropUnique(['email']);
+            });
+        }
+
+        if (!in_array('users_email_hash_unique', $indexes)) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->unique('email_hash');
+            });
+        }
     }
 
     public function down(): void
