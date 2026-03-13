@@ -30,7 +30,11 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', function ($attribute, $value, $fail) {
+                if (User::findByEmail($value)) {
+                    $fail('The email address has already been taken.');
+                }
+            }],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'in:admin,inventory,sales,customer'],
             'department_id' => ['nullable', 'exists:departments,id']
@@ -62,7 +66,12 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', function ($attribute, $value, $fail) use ($user) {
+                $existing = User::findByEmail($value);
+                if ($existing && $existing->id !== $user->id) {
+                    $fail('The email address has already been taken.');
+                }
+            }],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'in:admin,inventory,sales,customer'],
             'department_id' => ['nullable', 'exists:departments,id']

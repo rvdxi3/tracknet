@@ -52,7 +52,7 @@
                     <div>
                         <div class="fw-bold">Email OTP</div>
                         <div class="text-muted" style="font-size:.85rem;">
-                            We'll send a 6-digit code to <strong>{{ $user->email }}</strong>.
+                            We'll send a 6-digit code to <strong>{{ $user->masked_email }}</strong>.
                             Quick and no extra app needed.
                         </div>
                     </div>

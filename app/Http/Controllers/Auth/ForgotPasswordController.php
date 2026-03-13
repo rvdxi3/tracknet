@@ -37,7 +37,7 @@ class ForgotPasswordController extends Controller
 
         RateLimiter::hit($key, 60);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::findByEmail($request->email);
 
         // Always store email in session and redirect — avoid email enumeration
         session(['pw_reset_email' => $request->email]);
@@ -79,7 +79,7 @@ class ForgotPasswordController extends Controller
             return redirect()->route('password.request');
         }
 
-        $user = User::where('email', $email)->first();
+        $user = User::findByEmail($email);
 
         if ($user) {
             $mfaCode = MfaCode::where('user_id', $user->id)
@@ -121,7 +121,7 @@ class ForgotPasswordController extends Controller
 
         RateLimiter::hit($key, 60);
 
-        $user = User::where('email', $email)->first();
+        $user = User::findByEmail($email);
 
         if ($user) {
             $this->sendOtp($user);

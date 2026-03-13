@@ -141,7 +141,7 @@
             <div class="account-sidebar-user">
                 <div class="account-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                 <div class="account-user-name">{{ auth()->user()->name }}</div>
-                <div class="account-user-email">{{ auth()->user()->email }}</div>
+                <div class="account-user-email">{{ auth()->user()->masked_email }}</div>
             </div>
             <nav class="account-nav">
                 <a href="{{ route('account.index') }}" class="account-nav-link">

@@ -14,7 +14,7 @@
             <input id="email" type="email" name="email"
                    class="form-control @error('email') is-invalid @enderror"
                    value="{{ old('email') }}" required autofocus autocomplete="email"
-                   placeholder="you@example.com">
+                   placeholder="you@example.com" maxlength="255" spellcheck="false">
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -34,7 +34,8 @@
             <span class="input-group-text"><i class="fas fa-lock text-muted"></i></span>
             <input id="password" type="password" name="password"
                    class="form-control @error('password') is-invalid @enderror"
-                   required autocomplete="current-password" placeholder="••••••••">
+                   required autocomplete="current-password" placeholder="••••••••"
+                   maxlength="128" spellcheck="false">
             <button class="btn btn-outline-secondary" type="button" id="togglePassword" tabindex="-1">
                 <i class="fas fa-eye" id="eyeIcon"></i>
             </button>

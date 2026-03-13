@@ -17,6 +17,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'email_hash',
         'password',
         'role',
         'department_id',
@@ -34,6 +35,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'mfa_secret',
+        'email_hash',
     ];
 
     protected $casts = [
@@ -43,7 +45,61 @@ class User extends Authenticatable
         'approved_at'       => 'datetime',
         'rejected_at'       => 'datetime',
         'mfa_secret'        => 'encrypted',
+        'email'             => 'encrypted',
     ];
+
+    // -------------------------------------------------------------------------
+    // Auto-compute email_hash on save
+    // -------------------------------------------------------------------------
+
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if ($user->isDirty('email')) {
+                $plainEmail = $user->email; // decrypted by cast
+                $user->email_hash = hash('sha256', strtolower($plainEmail));
+            }
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // Email masking accessor
+    // -------------------------------------------------------------------------
+
+    public function getMaskedEmailAttribute(): string
+    {
+        $email = $this->email;
+        if (!$email || !str_contains($email, '@')) {
+            return '***@***.***';
+        }
+
+        [$local, $domain] = explode('@', $email);
+        $len = strlen($local);
+
+        if ($len <= 2) {
+            $masked = $local[0] . str_repeat('*', max($len - 1, 1));
+        } elseif ($len <= 4) {
+            $masked = $local[0] . str_repeat('*', $len - 2) . $local[$len - 1];
+        } else {
+            $masked = substr($local, 0, 2) . str_repeat('*', $len - 3) . substr($local, -1);
+        }
+
+        return $masked . '@' . $domain;
+    }
+
+    // -------------------------------------------------------------------------
+    // Static helper: find user by email using hash
+    // -------------------------------------------------------------------------
+
+    public static function findByEmail(string $email): ?self
+    {
+        $hash = hash('sha256', strtolower(trim($email)));
+        return static::where('email_hash', $hash)->first();
+    }
+
+    // -------------------------------------------------------------------------
+    // Relationships
+    // -------------------------------------------------------------------------
 
     public function department()
     {
@@ -62,13 +118,17 @@ class User extends Authenticatable
 
     public function sales()
     {
-        return $this->hasMany(Sale::class, 'user_id'); // sales person
+        return $this->hasMany(Sale::class, 'user_id');
     }
 
     public function purchaseOrders()
     {
         return $this->hasMany(PurchaseOrder::class);
     }
+
+    // -------------------------------------------------------------------------
+    // Role helpers
+    // -------------------------------------------------------------------------
 
     public function isAdmin()
     {

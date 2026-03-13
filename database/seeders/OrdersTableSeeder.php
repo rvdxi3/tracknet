@@ -19,7 +19,7 @@ class OrdersTableSeeder extends Seeder
     {
         $customers = User::where('role', 'customer')->get();
         $products = Product::all();
-        $salesUser = User::where('email', 'sales@example.com')->first();
+        $salesUser = User::findByEmail('sales@example.com');
         
         for ($i = 0; $i < 10; $i++) {
             $customer = $customers->random();

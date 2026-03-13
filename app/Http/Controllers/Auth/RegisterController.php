@@ -25,16 +25,24 @@ class RegisterController extends Controller
 
     protected function validator(array $data)
     {
+        // Server-side input sanitization — strip tags and trim whitespace
+        $data['name']  = strip_tags(trim($data['name'] ?? ''));
+        $data['email'] = strip_tags(trim(strtolower($data['email'] ?? '')));
+
         return Validator::make($data, [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'name'     => ['required', 'string', 'max:255', 'regex:/^[A-Za-z\s\-\'.]+$/'],
+            'email'    => ['required', 'string', 'email', 'max:255', function ($attribute, $value, $fail) {
+                if (User::findByEmail($value)) {
+                    $fail('The email address has already been taken.');
+                }
+            }],
             'password' => [
                 'required',
                 'confirmed',
-                Password::min(8)->mixedCase()->numbers()->symbols(),
+                Password::min(12)->mixedCase()->numbers()->symbols(),
             ],
         ], [
-            'password.min'        => 'Password must be at least 8 characters.',
+            'password.min'        => 'Password must be at least 12 characters.',
             'password.mixed_case' => 'Password must contain at least one uppercase and one lowercase letter.',
             'password.numbers'    => 'Password must contain at least one number.',
             'password.symbols'    => 'Password must contain at least one special character (e.g. !@#$%^&*).',

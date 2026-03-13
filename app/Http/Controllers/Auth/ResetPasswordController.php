@@ -39,11 +39,11 @@ class ResetPasswordController extends Controller
             'password' => [
                 'required',
                 'confirmed',
-                Password::min(8)->mixedCase()->numbers()->symbols(),
+                Password::min(12)->mixedCase()->numbers()->symbols(),
             ],
         ]);
 
-        $user = User::where('email', session('pw_reset_email'))->first();
+        $user = User::findByEmail(session('pw_reset_email'));
 
         if (! $user) {
             return redirect()->route('password.request')

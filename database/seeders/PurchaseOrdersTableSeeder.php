@@ -17,7 +17,7 @@ class PurchaseOrdersTableSeeder extends Seeder
     public function run()
     {
         $suppliers = Supplier::all();
-        $inventoryUser = User::where('email', 'inventory@example.com')->first();
+        $inventoryUser = User::findByEmail('inventory@example.com');
         $products = Product::all();
         
         for ($i = 0; $i < 5; $i++) {

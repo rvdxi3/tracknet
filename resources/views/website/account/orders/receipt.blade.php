@@ -332,7 +332,7 @@
                         <strong>Customer</strong>
                         <p>
                             {{ $order->user->name }}<br>
-                            {{ $order->user->email }}
+                            {{ $order->user->masked_email }}
                         </p>
                     </div>
                     <div class="addr-block">

@@ -55,7 +55,7 @@
         <div class="step-num done"><i class="fas fa-check" style="font-size:.6rem;"></i></div>
         <div>
             <div class="fw-semibold" style="font-size:.9rem;">Account registered</div>
-            <div class="text-muted" style="font-size:.82rem;">{{ $user->email }}</div>
+            <div class="text-muted" style="font-size:.82rem;">{{ $user->masked_email }}</div>
         </div>
     </div>
     <div class="step-item">
@@ -76,7 +76,7 @@
 
 <div class="alert alert-info py-2" style="font-size:.85rem;">
     <i class="fas fa-info-circle me-2"></i>
-    You'll be notified at <strong>{{ $user->email }}</strong> once your account is approved.
+    You'll be notified at <strong>{{ $user->masked_email }}</strong> once your account is approved.
 </div>
 
 @endsection

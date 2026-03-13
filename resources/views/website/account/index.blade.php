@@ -58,7 +58,7 @@
                                 <h6 class="card-subtitle mb-2 text-muted">Account Details</h6>
                                 <p class="card-text">
                                     {{ auth()->user()->name }}<br>
-                                    {{ auth()->user()->email }}
+                                    {{ auth()->user()->masked_email }}
                                 </p>
                                 <a href="{{ route('account.edit') }}" class="btn btn-sm btn-outline-primary">Edit Account</a>
                             </div>

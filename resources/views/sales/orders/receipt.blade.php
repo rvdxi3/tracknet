@@ -325,7 +325,7 @@
                         <strong>Customer</strong>
                         <p>
                             {{ $order->user->name }}<br>
-                            {{ $order->user->email }}
+                            {{ $order->user->masked_email }}
                         </p>
                     </div>
                     <div class="info-block">
@@ -399,7 +399,7 @@
                 {{-- Processed by --}}
                 @if($order->sale && $order->sale->user)
                 <div class="processed-block">
-                    <strong>Processed by:</strong> {{ $order->sale->user->name }} ({{ $order->sale->user->email }})
+                    <strong>Processed by:</strong> {{ $order->sale->user->name }} ({{ $order->sale->user->masked_email }})
                     &nbsp;·&nbsp; <strong>Last updated:</strong> {{ $order->sale->updated_at->format('M d, Y g:i A') }}
                 </div>
                 @endif

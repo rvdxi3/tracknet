@@ -270,7 +270,7 @@
                         </div>
                         <div>
                             <div style="font-weight:700; color:#0f172a; font-size:.9rem;">{{ $order->user->name ?? '—' }}</div>
-                            <div style="font-size:.75rem; color:#64748b;">{{ $order->user->email ?? '' }}</div>
+                            <div style="font-size:.75rem; color:#64748b;">{{ $order->user->masked_email ?? '' }}</div>
                         </div>
                     </div>
                 </div>

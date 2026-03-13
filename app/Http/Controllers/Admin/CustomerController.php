@@ -45,7 +45,12 @@ class CustomerController extends Controller
 
         $request->validate([
             'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($customer->id)],
+            'email' => ['required', 'string', 'email', 'max:255', function ($attribute, $value, $fail) use ($customer) {
+                $existing = User::findByEmail($value);
+                if ($existing && $existing->id !== $customer->id) {
+                    $fail('The email address has already been taken.');
+                }
+            }],
         ]);
 
         $customer->update($request->only(['name', 'email']));

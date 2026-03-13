@@ -35,16 +35,19 @@ class AccountController extends Controller
         
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', function ($attribute, $value, $fail) use ($user) {
+                $existing = \App\Models\User::findByEmail($value);
+                if ($existing && $existing->id !== $user->id) {
+                    $fail('The email address has already been taken.');
+                }
+            }],
             'current_password' => ['nullable', 'required_with:password', 'string', 'min:8'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
         
         // Verify current password if changing password
-        if ($request->filled('current_password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return back()->with('error', 'Current password is incorrect');
-            }
+        if ($request->filled('current_password') && !Hash::check($request->current_password, $user->password)) {
+            return back()->with('error', 'Current password is incorrect');
         }
         
         $user->update([
@@ -117,7 +120,9 @@ class AccountController extends Controller
 
         try {
             $order->user->notify(new OrderCancelledNotification($order));
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            \Log::warning('Order cancellation notification failed: ' . $e->getMessage());
+        }
 
         return redirect()->route('account.orders')
             ->with('success', 'Your order has been cancelled.');

@@ -16,7 +16,8 @@
             <input id="name" type="text" name="name"
                    class="form-control @error('name') is-invalid @enderror"
                    value="{{ old('name') }}" required autofocus autocomplete="name"
-                   placeholder="Your full name">
+                   placeholder="Your full name" maxlength="255" spellcheck="false"
+                   pattern="[A-Za-z\s\-'.]{2,255}" title="Letters, spaces, hyphens, and apostrophes only">
             @error('name')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -31,7 +32,7 @@
             <input id="email" type="email" name="email"
                    class="form-control @error('email') is-invalid @enderror"
                    value="{{ old('email') }}" required autocomplete="email"
-                   placeholder="you@example.com">
+                   placeholder="you@example.com" maxlength="255" spellcheck="false">
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -45,8 +46,8 @@
             <span class="input-group-text"><i class="fas fa-lock text-muted"></i></span>
             <input id="password" type="password" name="password"
                    class="form-control @error('password') is-invalid @enderror"
-                   required autocomplete="new-password" placeholder="Min 8 chars, uppercase, number, symbol"
-                   oninput="checkStrength(this.value)">
+                   required autocomplete="new-password" placeholder="Min 12 chars, uppercase, number, symbol"
+                   maxlength="128" spellcheck="false" oninput="checkStrength(this.value)">
             <button class="btn btn-outline-secondary" type="button" id="togglePw" tabindex="-1">
                 <i class="fas fa-eye" id="eyePw"></i>
             </button>
@@ -76,7 +77,7 @@
     {{-- Password policy reminder --}}
     <div class="alert alert-info py-2 mb-4" style="font-size:.82rem;">
         <i class="fas fa-shield-alt me-1"></i>
-        Password must be at least <strong>8 characters</strong> and include uppercase, lowercase, a number, and a special character.
+        Password must be at least <strong>12 characters</strong> and include uppercase, lowercase, a number, and a special character.
     </div>
 
     <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
@@ -108,7 +109,7 @@
     // Simple strength meter
     function checkStrength(value) {
         let score = 0;
-        if (value.length >= 8)              score++;
+        if (value.length >= 12)             score++;
         if (/[A-Z]/.test(value))            score++;
         if (/[a-z]/.test(value))            score++;
         if (/[0-9]/.test(value))            score++;

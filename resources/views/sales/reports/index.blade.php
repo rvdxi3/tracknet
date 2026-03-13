@@ -933,7 +933,7 @@
                     </div>
                     <div>
                         <div style="font-weight:700;color:#0f172a;font-size:.95rem;">{{ $order->user?->name ?? '—' }}</div>
-                        <div style="font-size:.78rem;color:#64748b;">{{ $order->user?->email ?? '—' }}</div>
+                        <div style="font-size:.78rem;color:#64748b;">{{ $order->user?->masked_email ?? '—' }}</div>
                     </div>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">

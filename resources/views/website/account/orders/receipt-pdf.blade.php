@@ -87,7 +87,7 @@
             <tr>
                 <td>
                     <strong>Customer</strong>
-                    <p>{{ $order->user->name }}<br>{{ $order->user->email }}</p>
+                    <p>{{ $order->user->name }}<br>{{ $order->user->masked_email }}</p>
                 </td>
                 <td>
                     <strong>Shipping Address</strong>

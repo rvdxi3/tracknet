@@ -90,7 +90,7 @@
         <div class="section-title">Customer &amp; Delivery Information</div>
         <table class="info-table">
             <tr>
-                <td><strong>Customer</strong>{{ $order->user->name }}<br>{{ $order->user->email }}</td>
+                <td><strong>Customer</strong>{{ $order->user->name }}<br>{{ $order->user->masked_email }}</td>
                 <td><strong>Shipping Address</strong>{{ $order->shipping_address ?? 'N/A' }}</td>
                 <td><strong>Billing Address</strong>{{ $order->billing_address ?? $order->shipping_address ?? 'N/A' }}</td>
             </tr>
@@ -139,7 +139,7 @@
 
         @if($order->sale && $order->sale->user)
         <div class="processed">
-            <strong>Processed by:</strong> {{ $order->sale->user->name }} ({{ $order->sale->user->email }})
+            <strong>Processed by:</strong> {{ $order->sale->user->name }} ({{ $order->sale->user->masked_email }})
             &nbsp;·&nbsp; <strong>Last updated:</strong> {{ $order->sale->updated_at->format('M d, Y g:i A') }}
         </div>
         @endif

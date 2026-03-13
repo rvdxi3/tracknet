@@ -1,7 +1,7 @@
 @extends('auth.layout')
 
-@section('title', 'Email Verification')
-@section('subtitle', 'Enter your verification code')
+@section('title', 'Login Verification')
+@section('subtitle', 'Verify your identity')
 
 @push('styles')
 <style>
@@ -24,9 +24,15 @@
 
 @section('content')
 <p class="text-muted mb-4" style="font-size:.9rem;">
-    A 6-digit code was sent to <strong>{{ $user->masked_email }}</strong>.
+    A 6-digit verification code was sent to <strong>{{ $user->masked_email }}</strong>.
     Enter it below. The code expires in <strong>10 minutes</strong>.
 </p>
+
+@if(session('success'))
+    <div class="alert alert-success py-2 mb-3">
+        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+    </div>
+@endif
 
 @if ($errors->has('code'))
     <div class="alert alert-danger py-2 mb-3">
@@ -35,7 +41,7 @@
 @endif
 
 {{-- Development helper: show code when using log mail driver --}}
-@if(session('dev_otp_code'))
+@if(session('dev_login_otp'))
     <div class="alert py-2 mb-3" style="background:#fefce8;border:1px solid #fbbf24;border-radius:8px;">
         <div class="d-flex align-items-center gap-2 mb-1">
             <i class="fas fa-flask" style="color:#d97706;"></i>
@@ -43,25 +49,27 @@
         </div>
         <div style="font-size:.85rem;color:#78350f;">
             Your code is:
-            <strong id="devCode" style="font-size:1.2rem;letter-spacing:.18em;font-family:monospace;">{{ session('dev_otp_code') }}</strong>
-            <button type="button" onclick="autofillCode('{{ session('dev_otp_code') }}')"
+            <strong id="devCode" style="font-size:1.2rem;letter-spacing:.18em;font-family:monospace;">{{ session('dev_login_otp') }}</strong>
+            <button type="button" onclick="autofillCode('{{ session('dev_login_otp') }}')"
                     class="btn btn-sm ms-2" style="background:#fbbf24;border:none;font-size:.75rem;padding:.15rem .5rem;">
                 Fill in
             </button>
         </div>
-        <div class="mt-1" style="font-size:.75rem;color:#92400e;">
-            In production, set <code>MAIL_MAILER=smtp</code> in <code>.env</code> to send real emails.
-        </div>
     </div>
 @endif
 
-<form method="POST" action="{{ route('mfa.email.verify') }}" id="otpForm">
+@if($user->mfa_method === 'totp')
+    <div class="alert alert-info py-2 mb-3" style="font-size:.85rem;">
+        <i class="fas fa-mobile-alt me-1"></i>
+        You can also enter a code from your <strong>Authenticator App</strong>.
+    </div>
+@endif
+
+<form method="POST" action="{{ route('login.verify') }}" id="otpForm">
     @csrf
 
-    {{-- Hidden input for the combined code --}}
     <input type="hidden" name="code" id="codeInput">
 
-    {{-- 6 individual boxes --}}
     <div class="d-flex justify-content-center gap-2 mb-4">
         @for ($i = 0; $i < 6; $i++)
             <input type="text" inputmode="numeric" maxlength="1"
@@ -70,13 +78,13 @@
     </div>
 
     <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mb-3" id="verifyBtn">
-        <i class="fas fa-check-circle me-2"></i>Verify Code
+        <i class="fas fa-shield-alt me-2"></i>Verify &amp; Sign In
     </button>
 </form>
 
 <div class="text-center">
     <span class="text-muted" style="font-size:.85rem;">Didn't receive it? </span>
-    <form method="POST" action="{{ route('mfa.email.resend') }}" class="d-inline" id="resendForm">
+    <form method="POST" action="{{ route('login.resend') }}" class="d-inline" id="resendForm">
         @csrf
         <button type="submit" class="btn btn-link p-0 fw-semibold" id="resendBtn" style="font-size:.85rem;">
             Resend code
@@ -91,8 +99,8 @@
 @endsection
 
 @section('footer')
-    <a href="{{ route('mfa.method') }}" class="text-primary" style="font-size:.85rem;">
-        <i class="fas fa-arrow-left me-1"></i>Change MFA method
+    <a href="{{ route('login') }}" class="text-primary" style="font-size:.85rem;">
+        <i class="fas fa-arrow-left me-1"></i>Back to login
     </a>
 @endsection
 
@@ -100,11 +108,9 @@
 <script>
     const inputs   = document.querySelectorAll('.otp-input');
     const codeIn   = document.getElementById('codeInput');
-    const form     = document.getElementById('otpForm');
     const resendBtn = document.getElementById('resendBtn');
     const countdown = document.getElementById('countdown');
 
-    // Auto-advance between boxes
     inputs.forEach((input, idx) => {
         input.addEventListener('input', function () {
             this.value = this.value.replace(/\D/g, '').slice(-1);
@@ -131,17 +137,14 @@
         codeIn.value = [...inputs].map(i => i.value).join('');
     }
 
-    // Focus first box on load
     inputs[0].focus();
 
-    // Dev helper: auto-fill the OTP boxes with the given code
     function autofillCode(code) {
         [...code].forEach((ch, i) => { if (inputs[i]) inputs[i].value = ch; });
         syncCode();
         inputs[5].focus();
     }
 
-    // 60-second resend countdown
     function startCountdown(seconds) {
         resendBtn.disabled = true;
         resendBtn.style.display = 'none';

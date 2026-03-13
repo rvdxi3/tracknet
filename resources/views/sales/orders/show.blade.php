@@ -324,7 +324,7 @@
                             </div>
                             <div>
                                 <div class="od-customer-name">{{ $order->user->name }}</div>
-                                <div class="od-customer-email">{{ $order->user->email }}</div>
+                                <div class="od-customer-email">{{ $order->user->masked_email }}</div>
                             </div>
                         </div>
                         <div class="od-stat-row">

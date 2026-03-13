@@ -21,6 +21,11 @@ Route::post('password/otp/resend',  [App\Http\Controllers\Auth\ForgotPasswordCon
 Route::get('password/reset/new',    [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset.form');
 Route::post('password/reset',       [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
 
+// Login MFA verification (OTP on every login)
+Route::get('login/verify',   [App\Http\Controllers\Auth\LoginController::class, 'showLoginVerify'])->name('login.verify');
+Route::post('login/verify',  [App\Http\Controllers\Auth\LoginController::class, 'verifyLoginOtp']);
+Route::post('login/resend',  [App\Http\Controllers\Auth\LoginController::class, 'resendLoginOtp'])->name('login.resend');
+
 // MFA Routes (session-guarded, no auth middleware — user is not logged in yet)
 Route::prefix('mfa')->name('mfa.')->group(function () {
     Route::get('method',       [App\Http\Controllers\Auth\MfaController::class, 'showMethodSelect'])->name('method');
